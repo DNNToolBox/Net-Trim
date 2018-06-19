@@ -1,0 +1,9 @@
+title: Net-Trim
+tagline: [A Tool To Optimize/Prune Deep Model Architectures]
+baseurl:      "/Net-Trim"
+markdown: kramdown
+
+# About/contact
+author:
+  name:       Alireza Aghasi
+  url:        https://sites.google.com/view/aghasi
