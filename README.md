@@ -1,8 +1,8 @@
 # Net-Trim
-This page contains the latest version of Net-Trim, which addresses the original convex program in constrained form. For simple instructions on how to use the code, please visit:
+This page contains the latest version of Net-Trim, which addresses the original convex program in the constrained form. For simple instructions on how to use the code, please visit:
 
 * [**Latest Code Manual**](https://dnntoolbox.github.io/Net-Trim/)
-* [**Latest (2018) Journal Preprint**](https://arxiv.org)
+* [**Latest (2018) Journal Preprint**](https://arxiv.org/pdf/1806.06457.pdf)
 
 To access the Net-Trim code in the regularized form (old version), please visit:
 
