@@ -410,7 +410,7 @@ with Performance Guarantee"](https://papers.nips.cc/paper/6910-net-trim-convex-p
 $$\min_{\mathbf{U}}~~ \|\mathbf{X}_{out} - \operatorname{ReLU}(\mathbf{U}^\top\mathbf{X}_{in})\|_F^2 + \lambda\|\mathbf{U}\|_1. 
 $$
 
-The journal version: ["Net-Trim: Fast Convex Pruning of Neural Networks"](https://arxiv.org/pdf/1806.06457.pdf) addresses Net-Trim in the constrained form
+The journal version: ["Fast Convex Pruning of Deep Neural Networks"](https://arxiv.org/pdf/1806.06457.pdf) addresses Net-Trim in the constrained form
 
 $$\min_{\mathbf{U}}~~ \|\mathbf{U}\|_1 ~ ~~~ \mbox{subject to:}~~~~ \|\mathbf{X}_{out} - \operatorname{ReLU}(\mathbf{U}^\top\mathbf{X}_{in})\|_F\leq \epsilon.
 $$
