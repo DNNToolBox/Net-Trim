@@ -230,7 +230,7 @@ The value of $$\epsilon$$ is a trade-off between the model sparsity and bias (tr
 
 ### II.1. Retraining the Convolutional Layer
 
-Since the convolution operator is a linear operator, Net-Trim formulation conveniently extends to such layers. The only additional component is dealing with tensors instead of matrices. While the convolution operator and the data tensors can be converted to matrices and vectors to apply the standard Net-Trim formulation, one can directly work with operators and avoid such conversion. We suggest consulting the following document which explains the details of applying Net-Trim when the linear operator is not in a matrix form. This implementation only requires forming the adjoint operator and replaces the Net-Trim least squares solve with a zeries of conjugate gradient iterations:
+Since the convolution operator is a linear operator, Net-Trim formulation conveniently extends to such layers. The only additional component is dealing with tensors instead of matrices. While the convolution operator and the data tensors can be converted to matrices and vectors to apply the standard Net-Trim formulation, one can directly work with operators and avoid such conversion. We suggest consulting the following document which explains the details of applying Net-Trim when the linear operator is not in a matrix form. This implementation only requires forming the adjoint operator and replaces the Net-Trim least squares solve with a series of conjugate gradient iterations:
 
  - [Supplemental Note: "Net-Trim Implementation for Convolutional Layers"]({{ site.baseurl }}/OperativeCG.pdf)
 
