@@ -234,7 +234,7 @@ Since the convolution operator is a linear operator, Net-Trim formulation conven
 
  - [Supplemental Note: "Net-Trim Implementation for Convolutional Layers"]({{ site.baseurl }}/OperativeCG.pdf)
 
-The python code for such implementation will be available soon.
+The Python code for such implementation will be available soon.
 
 ## III. Net-Trim Code: More Technical Demo
 
