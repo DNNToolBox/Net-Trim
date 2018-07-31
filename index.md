@@ -216,13 +216,13 @@ for k in range(3):
 
     print('elapsed time = ', elapsed)
 ```
-### II.1. Retraining the Convolutional Layer
+### II.1. Retraining the Convolutional Layers
 
 Since the convolution operator is a linear operator, Net-Trim formulation conveniently extends to such layers. The only additional component is dealing with tensors instead of matrices. While the convolution operator and the data tensors can be converted to matrices and vectors to apply the standard Net-Trim formulation, one can directly work with operators and avoid such conversion. We suggest consulting the following document which explains the details of applying Net-Trim when the linear operator is not in a matrix form. This implementation only requires forming the adjoint operator and replaces the Net-Trim least squares solve with a series of conjugate gradient iterations:
 
  - [Supplemental Note: "Net-Trim Implementation for Convolutional Layers"]({{ site.baseurl }}/OperativeCG.pdf)
 
-Continuing the retraining process above, the following code prunes the convolutional layers.
+The retraining of the convolutional layers can become faster if the conjugate gradient iterations become stochastic. The following code prunes the convolutional layers (it however does not use the stochastic version of the conjugate gradient).
 ```
 # Net-Trim pruning for the convolutional layers
 # indices of the signals input to the convolutional layers, and the corresponding weights and biases
