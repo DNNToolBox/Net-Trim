@@ -81,6 +81,7 @@ import numpy as np
 import copy
 import time
 import NetTrimSolver_tf as nt_tf
+import ConvNetTrimSolver_tf as cnt_tf
 import keras
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -92,22 +93,26 @@ from keras.layers.convolutional import MaxPooling2D
 from keras.utils import np_utils
 from keras.backend import set_image_dim_ordering
 
+strides = [1, 1, 1, 1]
+padding = 'SAME'
+data_folder = 'SomePath/'
 
+# defining model
 def my_model():
     # create model
-    model = Sequential()
-    model.add(Conv2D(20, (5, 5), input_shape=(1, 28, 28), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(10, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.2))
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(num_classes, activation='softmax'))
+    _model = Sequential()
+    _model.add(Conv2D(20, (5, 5), input_shape=(1, 28, 28), activation='relu', strides=strides[1:-1], padding=padding))
+    _model.add(MaxPooling2D(pool_size=(2, 2)))
+    _model.add(Conv2D(10, (3, 3), activation='relu', strides=strides[1:-1], padding=padding))
+    _model.add(MaxPooling2D(pool_size=(2, 2)))
+    _model.add(Dropout(0.2))
+    _model.add(Flatten())
+    _model.add(Dense(128, activation='relu'))
+    _model.add(Dense(50, activation='relu'))
+    _model.add(Dense(num_classes, activation='softmax'))
     # compile model : setting the training algorithm
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    return model
+    _model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return _model
 ```
 
 We now start training the model. For a faster training we only use 5 epochs, you can increase it to as many as you would find necessary:
@@ -134,60 +139,66 @@ num_classes = y_test.shape[1]
 
 # build the model
 model = my_model()
-# In case you have already saved a model
-# model.load_weights('SomePath/data.h5')
+# # In case you have already saved a model
+# model.load_weights(data_folder + 'trained_weights.h5')
 # Fit the model: For more accurate results increase epochs to 10 or more
-model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=5, batch_size=200)
+model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=1, batch_size=200)
 # In case you want to save the trained model
-# model.save_weights('SomePath/data.h5')
+model.save_weights(data_folder + 'trained_weights.h5')
 ```
 
 Let's assess the model accuracy:
 ```
 # Initial evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)
-print("Accuracy of the Initially Trained Model: %.2f%%" % (scores[1]*100))
+print("Accuracy of the Initially Trained Model: %.2f%%" % (scores[1] * 100))
 ```
 
-At this point, we have a trained network. We can extract the coefficient matrices, along with the input/output data associated with each layer. For now, let's only extract the matrices corresponding to the fully connected (FC) layers (layers 3, 4 and 5) and the corresponding signals of the layers. Note that when applying Net-Trim we do not necessarily need to use the entire training data and even a subset of the data would suffice. For instance here we use 40K samples instead of the full 55K ones. 
+At this point, we have a trained network. We can extract the coefficient matrices, along with the input/output data associated with each layer.  
 ```
-# get weights and biases of the fully connected layers of the trained model
+# inputs and outputs of the layers of the trained model
 org_weights = model.get_weights()
-w = org_weights[4::2]
-b = org_weights[5::2]
 
-# inputs of the fully connected layers
 inputs = [layer.output for layer in model.layers]
-inputs = inputs[-4:]
 layer_inputs = keras.backend.function([model.input, keras.backend.learning_phase()], inputs)
 
 # using a subset of the training data for Net-Trim retraining (use 55000 to apply full data)
-data_subset_size = 40000
+data_subset_size = 20000
 data_index = np.random.choice(np.arange(X_train.shape[0]), data_subset_size, replace=False)
 
 X = layer_inputs([X_train[data_index, :, :, :], 0])
+X = [X_train[data_index, :, :, :]] + X
+
+# In case, you want to save signals and weights
+np.savez_compressed(data_folder + 'nn_data.npz', *X)
+np.savez_compressed(data_folder + 'nn_org_weights.npz', *org_weights)
 ```
-We may now apply the Net-Trim stand-alone code to each layer to acquire a new sparse weight matrix. You would only need $$\mathbf{X}_{in}$$, $$\mathbf{X}_{out}$$ and choose a value of $$\epsilon$$ to retrain a layer (see the second program in [Section IV](#iv-net-trim-versions)). The value that you pass as $$\epsilon$$ is relative, for instance if you set $$\epsilon=0.05$$, the actual $$\epsilon$$ that the program uses is $$0.05\|\mathbf{X}_{out}\|_F$$. We apply Net-Trim to layers 2, 3 and 4 as reflected in the loop below. Here we used $$\epsilon=0.05$$ for all the layers. The parameter rho is the ADMM penalty parameter that depends on the data scaling, here $$\rho = 1$$ yields a reasonably fast convergence. The number of ADMM iterations are controlled by the product of *unroll_number* and *max_iterations*, where the former is the number of loops performed within the GPU and the latter indicates the exterior loops. Overall, the total ADMM iterations are the product of the two and normally 300 to 500 totall iterations are enough for a proper convergence. For the last layer that usually no activation is used, Net-Trim program reduces to a sparse least-squares program.
+For now, let's only extract the matrices corresponding to the fully connected (FC) layers (layers 3, 4 and 5) and the corresponding signals of the layers. Note that when applying Net-Trim we do not necessarily need to use the entire training data and even a subset of the data would suffice. For instance here we can use 20K samples instead of the full 55K ones. Let's now apply the Net-Trim stand-alone code to each layer to acquire a new sparse weight matrix. You would only need $$\mathbf{X}_{in}$$, $$\mathbf{X}_{out}$$ and choose a value of $$\epsilon$$ to retrain a layer (see the second program in [Section IV](#iv-net-trim-versions)). The value that you pass as $$\epsilon$$ is relative, for instance if you set $$\epsilon=0.05$$, the actual $$\epsilon$$ that the program uses is $$0.05\|\mathbf{X}_{out}\|_F$$. We apply Net-Trim to layers 2, 3 and 4 as reflected in the loop below. Here we used $$\epsilon=0.05$$ for all the layers. The parameter rho is the ADMM penalty parameter that depends on the data scaling, here $$\rho = 1$$ yields a reasonably fast convergence. The number of ADMM iterations are controlled by the product of *unroll_number* and *max_iterations*, where the former is the number of loops performed within the GPU and the latter indicates the exterior loops. Overall, the total ADMM iterations are the product of the two and normally 300 to 500 totall iterations are enough for a proper convergence. For the last layer that usually no activation is used, Net-Trim program reduces to a sparse least-squares program.
 ```
-# Net-Trim pruning
+# Net-Trim pruning for the fully connected layers
+# indices of the signals input to the fully connected layers, and the corresponding weights and biases
+fc_layers = [6, 7, 8]
+fc_w_index = [4, 6, 8]
+fc_b_index = [5, 7, 9]
+
 unroll_number = 10
 max_iterations = 40
-# defining a Net-Trim class
-nt = nt_tf.NetTrimSolver(unroll_number=unroll_number)
+# defining a Net-Trim class for the fully connected layers
+nt_fc = nt_tf.NetTrimSolver(unroll_number=unroll_number)
 
 epsilon_gain = 0.05
-Wh = [[]] * 3
-bh = [[]] * 3
-for layer in range(3):
-    x = np.concatenate([X[layer].transpose(), np.ones((1, data_subset_size))])
-    y = X[layer + 1].transpose()
+nt_weights = copy.deepcopy(org_weights)
 
-    if layer < 2:
+for k in range(3):
+    x = np.concatenate([X[fc_layers[k]].transpose(), np.ones((1, data_subset_size))])
+    y = X[fc_layers[k] + 1].transpose()
+
+    if k < 2:
         # ReLU layer, use net-trim
         V = np.zeros(y.shape)
     else:
         # use sparse least-squares (for the last layer, ignore the activation function)
-        wh = np.concatenate([w[layer], b[layer][np.newaxis, :]])
+        wh = np.concatenate([org_weights[fc_w_index[k]], org_weights[fc_b_index[k]][np.newaxis, :]])
         y = np.matmul(wh.transpose(), x)
         V = None
 
@@ -196,45 +207,83 @@ for layer in range(3):
 
     start = time.time()
     # main Net-Trim call
-    W_nt = nt.run(x, y, V, epsilon, rho=1, num_iterations=max_iterations)
+    W_nt = nt_fc.run(x, y, V, epsilon, rho=1, num_iterations=max_iterations)
     elapsed = time.time() - start
 
-    Wh[layer] = W_nt[:-1, :]
-    bh[layer] = W_nt[-1, :]
+    # store the trimmed parameters
+    nt_weights[fc_w_index[k]] = W_nt[:-1, :]
+    nt_weights[fc_b_index[k]] = W_nt[-1, :]
+
     print('elapsed time = ', elapsed)
 ```
-Let's build a new model with the retrained sparse weights and compare the accuracy and the number of nonzeros of the initial and the retrained models matrices:
-```
-# evaluation of the original model
-scores = model.evaluate(X_test, y_test, verbose=0)
-# number of non-zero coefficients
-str_nnz = ', '.join('{}'.format(np.count_nonzero(np.abs(w) > 1e-4)) for w in org_weights[4::2])
-print("Original CNN model: accuracy = {0:.3f}, number of non-zeros = {1}".format(scores[1], str_nnz))
-
-# evaluation of the retrained model
-nt_weights = copy.deepcopy(org_weights)
-nt_weights[4::2] = Wh
-nt_weights[5::2] = bh
-model.set_weights(nt_weights)
-scores = model.evaluate(X_test, y_test, verbose=0)
-
-# number of non-zero coefficients
-str_nnz = ', '.join('{}'.format(np.count_nonzero(np.abs(w) > 1e-4)) for w in nt_weights[4::2])
-print("Pruned CNN model : accuracy = {0:.3f}, number of non-zeros = {1}".format(scores[1], str_nnz))
-
-# save model's parameters
-np.savez_compressed('parameters.npz', w=nt_weights[::2], b=nt_weights[1::2], type=['conv', 'conv', 'fc', 'fc', 'fc'])
-
-```
-The value of $$\epsilon$$ is a trade-off between the model sparsity and bias (training accuracy). Sometimes, when you use large $$\epsilon$$'s in the Net-Trim program to gain more sparsity, the network loses some accuracy. Often times a fine tuning round, where the network is trained again only updating the nonzero entries and initialized from the Net-Trim output can further improve the accuracy. This step-by-step demo was only a very quick and naiive way of implementing the Net-Trim. In Section [III](#iii-net-trim-code-more-technical-demo) we explain how to use a wrapper that conveniently builds the initial model, applies Net-Trim and performs a round of fine tuning to further improve the results. 
-
 ### II.1. Retraining the Convolutional Layer
 
 Since the convolution operator is a linear operator, Net-Trim formulation conveniently extends to such layers. The only additional component is dealing with tensors instead of matrices. While the convolution operator and the data tensors can be converted to matrices and vectors to apply the standard Net-Trim formulation, one can directly work with operators and avoid such conversion. We suggest consulting the following document which explains the details of applying Net-Trim when the linear operator is not in a matrix form. This implementation only requires forming the adjoint operator and replaces the Net-Trim least squares solve with a series of conjugate gradient iterations:
 
  - [Supplemental Note: "Net-Trim Implementation for Convolutional Layers"]({{ site.baseurl }}/OperativeCG.pdf)
 
-The Python code for such implementation will be available soon.
+Continuing the retraining process above, the following code prunes the convolutional layers.
+```
+# Net-Trim pruning for the convolutional layers
+# indices of the signals input to the convolutional layers, and the corresponding weights and biases
+conv_layers = [0, 2]
+conv_w_index = [0, 2]
+conv_b_index = [1, 3]
+
+unroll_number = 1
+max_iterations = 400
+# defining a Net-Trim class
+nt_conv = cnt_tf.NetTrimSolver(unroll_number=unroll_number, cg_iter=10, strides=strides, padding=padding, precision=32)
+
+epsilon_gain = 0.05
+for k in range(2):
+    x = X[conv_layers[k]]
+    y = X[conv_layers[k] + 1]
+    W = org_weights[conv_w_index[k]]
+    b = org_weights[conv_b_index[k]]
+
+    # transform data into the correct format, BxHxWxD (b/c of the Keras defaults, not necessary in general)
+    x = np.transpose(x, axes=(0, 2, 3, 1))
+    y = np.transpose(y, axes=(0, 2, 3, 1))
+
+    V = np.zeros(y.shape)
+
+    norm_Y = np.linalg.norm(y)
+    epsilon = epsilon_gain * norm_Y
+
+    start = time.time()
+    # main Net-Trim call
+    W_nt = nt_conv.run(x, y, V, b, W.shape, epsilon, rho=1, num_iterations=max_iterations)
+    elapsed = time.time() - start
+
+    nt_weights[conv_w_index[k]] = W_nt
+    nt_weights[conv_b_index[k]] = b
+
+    print('elapsed time = ', elapsed)
+
+# save model's parameters
+np.savez_compressed(data_folder + 'trimmed_weights.npz', *nt_weights)
+```
+
+Let's build a new model with the retrained sparse weights and compare the accuracy and the number of nonzeros of the initial and the retrained models matrices:
+```
+# evaluation of the original model
+model.set_weights(org_weights)
+org_scores = model.evaluate(X_test, y_test, verbose=0)
+
+# evaluation of the trimmed model
+model.set_weights(nt_weights)
+nt_scores = model.evaluate(X_test, y_test, verbose=0)
+
+# number of non-zero coefficients
+str_nnz = ', '.join('{}'.format(np.count_nonzero(np.abs(w) > 1e-4)) for w in org_weights[4::2])
+print("Original CNN model: accuracy = {0:.3f}, number of non-zeros = {1}".format(org_scores[1], str_nnz))
+
+# number of non-zero coefficients
+str_nnz = ', '.join('{}'.format(np.count_nonzero(np.abs(w) > 1e-4)) for w in nt_weights[::2])
+print("Pruned CNN model : accuracy = {0:.3f}, number of non-zeros = {1}".format(nt_scores[1], str_nnz))
+```
+The value of $$\epsilon$$ is a trade-off between the model sparsity and bias (training accuracy). Sometimes, when you use large $$\epsilon$$'s in the Net-Trim program to gain more sparsity, the network loses some accuracy. Often times a fine tuning round, where the network is trained again only updating the nonzero entries and initialized from the Net-Trim output can further improve the accuracy. This step-by-step demo was only a very quick and naiive way of implementing the Net-Trim. In Section [III](#iii-net-trim-code-more-technical-demo) we explain how to use a wrapper that conveniently builds the initial model, applies Net-Trim and performs a round of fine tuning to further improve the results. 
 
 ## III. Net-Trim Code: More Technical Demo
 
