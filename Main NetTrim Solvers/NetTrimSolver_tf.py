@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-
+# Main Net-Trim solver using Tensor Flow
 class NetTrimSolver:
     def __init__(self, unroll_number=10):
         self._graph = None
