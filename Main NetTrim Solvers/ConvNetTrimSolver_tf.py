@@ -1,6 +1,6 @@
 """
     This is the main function to prune convolutional layers which uses an operator form of conjugate
-    gradient as detailed in: https://dnntoolbox.github.io/Net-Trim/OperativeCG.pdf
+    gradient as detailed in: https://dnntoolbox.github.io/Net-Trim/OperativeCG.pdf. Also available in the Journal version.
 """
 import tensorflow as tf
 import numpy as np
