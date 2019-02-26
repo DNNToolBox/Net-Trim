@@ -28,7 +28,7 @@ class BasicCIFAR10Model:
         self._nn_biases = []
         self._fw_signals = []
 
-    # =========================================================================
+    # ========================================================================
     # build the neural network
     def create_network(self, initial_weights=None, initial_biases=None):
         if initial_weights is None:
