@@ -1,6 +1,6 @@
 """
-    Naive implementation of the Net-Trim for convolutional layer
-    It converts the convolution into matrix multiplication and then runs the existing net-trim to solve it
+    Naive implementation of the Net-Trim for convolutional layers
+    It converts the convolution into matrix multiplication and then runs the existing net-trim to solve it. This can be slow!
 """
 import tensorflow as tf
 import numpy as np
