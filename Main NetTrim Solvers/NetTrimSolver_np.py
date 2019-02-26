@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.linalg as sla
-
+# Main Net-Trim solver using NP
 
 def net_trim_solver(X: np.ndarray, Y: np.ndarray, V, epsilon, rho, max_iteration=10000):
     if X.shape[1] != Y.shape[1]:
