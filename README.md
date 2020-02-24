@@ -2,7 +2,7 @@
 This page contains the latest version of Net-Trim, which addresses the original convex program in the constrained form. For simple instructions on how to use the code, please visit:
 
 * [**Latest Code Manual**](https://dnntoolbox.github.io/Net-Trim/)
-* [**Latest (2019) Journal Preprint**](https://arxiv.org/pdf/1806.06457.pdf)
+* [**Latest (2019) Journal Paper**](https://epubs.siam.org/doi/abs/10.1137/19M1246468)
 
 To access the Net-Trim code in the regularized form (old version), please visit:
 
