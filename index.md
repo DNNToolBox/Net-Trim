@@ -52,7 +52,7 @@ For more technical details about the Net-Trim formulation and the way it works w
 
  - [NIPS, 2017: "Net-Trim: Convex Pruning of Deep Neural Networks
 with Performance Guarantee"](https://papers.nips.cc/paper/6910-net-trim-convex-pruning-of-deep-neural-networks-with-performance-guarantee)
- - [Journal Submission, 2019: "Fast Convex Pruning of Deep Neural Networks"](https://arxiv.org/pdf/1806.06457.pdf)
+ - [Journal Paper, 2020: "Fast Convex Pruning of Deep Neural Networks"](https://epubs.siam.org/doi/abs/10.1137/19M1246468)
  
 or the video presentations:
 
