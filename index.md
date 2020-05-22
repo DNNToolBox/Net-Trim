@@ -475,5 +475,5 @@ For a reference to Net-Trim please cite the following papers:
 
 * [**Conference Paper:**] Aghasi, A. Abdi, A. Nguyen, N. and Romberg, J., "Net-Trim: Convex Pruning of Deep Neural Networks with Performance Guarantee." In Advances in Neural Information Processing Systems, pp. 3180-3189. 2017.
 
-* [**Journal Submission:**] Aghasi, A. Abdi, A. and Romberg, J., "Fast Convex Pruning of Deep Neural Networks.", arxiv: 1806.06457 [cs.LG], [link](https://arxiv.org/abs/1806.06457)
+* [**Journal Paper:**] Aghasi, Alireza, Afshin Abdi, and Justin Romberg. "Fast convex pruning of deep neural networks." SIAM Journal on Mathematics of Data Science 2.1 (2020): 158-188., [link](https://epubs.siam.org/doi/abs/10.1137/19M1246468)
 
